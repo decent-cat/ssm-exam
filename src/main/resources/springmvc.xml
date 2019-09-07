@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd">
+
+
+    <!-- 包的扫描，扫描@Controller等 -->
+    <context:component-scan base-package="com.qf.ssmexam">
+        <!-- springmvc只负责扫描@Controller -->
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+    <!--
+		加上该句话后，可以支持日期的转换@DateFormate以及@Reponse
+	 -->
+    <mvc:annotation-driven></mvc:annotation-driven>
+
+    <!-- 过滤静态资源 -->
+<!--    <mvc:default-servlet-handler/>-->
+
+    <!-- 文件上传 -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="defaultEncoding" value="UTF-8" />
+        <!-- 文件大小，为 KB 1024KB=1M -->
+        <property name="maxUploadSize" value="20971520" />
+    </bean>
+
+    <!-- 视图解析器 -->
+    <bean id="templateResolver" class="org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver">
+        <property name="prefix" value="/WEB-INF/"/>
+        <property name="suffix" value=".html"/>
+        <property name="templateMode" value="HTML5"/>
+        <property name="cacheable" value="false"/>
+        <property name="characterEncoding" value="utf-8"/>
+    </bean>
+
+    <bean id="templateEngine" class="org.thymeleaf.spring5.SpringTemplateEngine">
+        <property name="templateResolver" ref="templateResolver"/>
+    </bean>
+
+    <bean class="org.thymeleaf.spring5.view.ThymeleafViewResolver">
+        <property name="templateEngine" ref="templateEngine"/>
+        <property name="characterEncoding" value="utf-8"/>
+    </bean>
+
+    <!-- 拦截器的功能与servlet中的Filter是一样 -->
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <!--
+                /*   :  /login 可以拦截  /user/delete拦截不了  /user/add/234拦截不了
+                /**  :  /login /user/delete /user/add/1234  这三种情况都可以拦截器
+             -->
+            <mvc:mapping path="/**"/>
+            <!-- 当所有请求都需要走如下的这个bean, 会进入到preHandle方法中 -->
+            <bean class="com.qf.ssmexam.interceptor.LoginInterceptor"/>
+        </mvc:interceptor>
+    </mvc:interceptors>
+
+    <!--
+        开启Aspectj的aop.
+     -->
+    <aop:aspectj-autoproxy/>
+</beans>

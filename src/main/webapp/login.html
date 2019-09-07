@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="css/adminlte.min.css">
+    <link rel="stylesheet" href="plugins/sweetalert2/sweetalert2.min.css">
+    <script src="https://cdn.bootcss.com/jquery/1.12.3/jquery.js"></script>
+    <script src="plugins/sweetalert2/sweetalert2.all.js"></script>
+    <style>
+        .mt-100 {
+            margin-top: 100px;
+        }
+        .align-center{
+            margin: 0 auto;
+        }
+    </style>
+    <script type="text/javascript">
+        var Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000
+        })
+
+        var Toast2 = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 4000
+        })
+
+        function loginSub() {
+            var username = $("#username").val();
+            var password = $("#password").val();
+
+            // 当username为undifined null "" 在if()的情况下会自动转为false
+            if(!username.trim()) {
+                Toast.fire({  // 这个表示的意思在左上角提示信息
+                    type: 'warning',
+                    title: '用户名不能为空'
+                });
+                return false;
+            }
+
+            //用户必须以字母开头，组成必须是a-zA-Z0-9_, 长度必须为3到6
+            var reg = /^\w{3,6}$/;  // \w表示的就是a-zA-Z0-9_
+            if(!reg.test(username)) {
+                Toast2.fire({  // 这个表示的意思在左上角提示信息
+                    type: 'warning',
+                    title: '用户名不符合规则, 只能为字母或数字, 并且只能以字母开头, 长度为3到6'
+                });
+                return false;
+            }
+
+            if(!password.trim()) {
+                Toast.fire({  // 这个表示的意思在左上角提示信息
+                    type: 'warning',
+                    title: '密码不能为空'
+                });
+                return false;
+            }
+
+            $.ajax({
+                method: "post",
+                url: "login.do",
+                dataType: "json",
+                // login.do?username=abc&password=222
+                data: {username: username, password: password},
+                success: function(_data) {
+                    // 返回的json数据 {"code":-1, "msg":"用户名或密码错误"}
+                    var code = _data.code;
+                    if(1 != code) {
+                        Toast.fire({  // 这个表示的意思在左上角提示信息
+                            type: 'warning',
+                            title: '用户名或密码错误'
+                        });
+                    }else {
+                        // dom  bom
+                        window.location.href="index.do"
+                    }
+                }
+            })
+
+            return false;
+        }
+    </script>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row mt-100">
+            <div class="col-sm-4 align-center">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">用户登录</h3>
+                    </div>
+                    <form role="form" action="">
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="username">用户名</label>
+                                <input type="input" class="form-control" id="username">
+                            </div>
+                            <div class="form-group">
+                                <label for="password">Password</label>
+                                <input type="password" class="form-control" id="password">
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" onclick="return loginSub()" class="btn btn-primary btn-block">登录</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

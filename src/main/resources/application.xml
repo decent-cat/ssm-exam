@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+		http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/aop
+		http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+		http://www.springframework.org/schema/tx
+		http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+
+    <!-- 包的扫描，扫描@Service @Repository @Component -->
+    <context:component-scan base-package="com.qf.ssmexam">
+        <!-- spring不负责扫描@Controller -->
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+    <!-- db.properties引入配置文件
+         system-properties-mode="NEVER" 如果配置不加，有些配置例如username, 当我们使用${username}, 会找系统的当前用户 Administrator
+         NEVER表示不获取系统的配置。
+    -->
+    <context:property-placeholder location="classpath:db.properties" system-properties-mode="NEVER"/>
+
+    <!-- 数据源的配置 -->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+
+        <property name="url" value="${url}"></property>
+        <property name="username" value="${username}"></property>
+        <property name="password" value="${password}"></property>
+        <property name="driverClassName" value="${driver_class}"></property>
+
+        <!-- 连接池中初始化的连接的数量 -->
+        <property name="initialSize" value="5"></property>
+
+        <!-- 连接池中连接的最小数量 -->
+        <property name="minIdle" value="2"></property>
+
+        <!-- 连接池中连接的最大数量  -->
+        <property name="maxActive" value="8"></property>
+
+        <!-- 获取连接最大的等待时间，单位毫秒 -->
+        <property name="maxWait" value="60000"></property>
+
+
+        <!-- 检查连接是否有效, value 值根据数据库必须为有效的 sql -->
+        <property name="validationQuery" value="select 1"></property>
+
+        <!-- 当连接不够的时候，申请链接先执行以上 sql, 通常设置为 false，为提高性能，与 validationQuery 配合使用 -->
+        <property name="testOnBorrow" value="false"></property>
+
+        <!-- 归还连接的时候执行的，通常设置为 false，为提高性能，与validationQuery 配合使用 -->
+        <property name="testOnReturn" value="false"></property>
+
+        <!-- 空闲的时候执行查询，通常设置为 true,不影响性能，与 validationQuery配合使用 -->
+        <property name="testWhileIdle" value="true"></property>
+
+        <!-- 空闲连接在连接池中最小的生存时间 -->
+        <property name="minEvictableIdleTimeMillis" value="300000"></property>
+
+        <!-- 打开PSCache，并且指定每个连接上PSCache的大小 ,注意：如果用Oracle，则把 poolPreparedStatements 配置为 true，mysql可以配置为 false。 -->
+        <property name="poolPreparedStatements" value="false"></property>
+
+        <property name="maxPoolPreparedStatementPerConnectionSize" value="20"></property>
+    </bean>
+
+    <!-- 获取SqlSessionFactory的Bean -->
+    <bean id="sqlSessionFacotry" class="org.mybatis.spring.SqlSessionFactoryBean">
+
+
+        <!--
+            例如name="dataSource",
+            private DataSource dataSource;  //属性可以没有，但是必要要有setDataSource方法
+            private void setDataSource(Datasource datasource) {
+                。。。。。
+            }
+         -->
+        <property name="dataSource" ref="dataSource" />
+
+        <!--
+			com.qf.ssmexam.pojo.Menus 生成一个别名：Menus
+			com.qf.ssmexam.model.Menus 也会生别名：Menus
+
+			解决方法：1.在mapper文件中直接写全类名。
+				     2. 创建mybatis.xml文件，在该文件中使用
+				    	<typeAlias type="com.qf.ssmexam.pojo.Menus" alias="Menus"/>的方式类自己定义别名,
+				    	<typeAlias type="com.qf.ssmexam.model.Menus" alias="Menuses"/>
+				      将该文件通过configLocation的方式引入过来。
+				   <property name="configLocation" value="classpath:mybatis.xml"></property>
+				    3.两种方式混合使用。
+		 -->
+        <property name="typeAliasesPackage" value="com.qf.ssmexam.pojo"/>
+
+        <!-- 映射文件的位置 -->
+        <property name="mapperLocations" value="classpath:mappers/**/*.xml"/>
+
+        <!--
+            private Interceptor[] plugins;
+            数组的注入方式 <array> </array>
+
+            如果plugsin是List类型，如下所示：
+            private list<Interceptor> plugins;
+            <list></list>
+
+            如果是plugins是Set类型, 如下所示：
+            private Set<Interceptor> plugins;
+            <set></set>
+         -->
+        <property name="plugins">
+            <array>
+                <bean class="com.github.pagehelper.PageInterceptor">
+                    <!--
+                        PageInterceptor中并没有properties属性，但是按照我们上面的描述，
+                        但是有setProperties方法，方法的申明如下：
+                        public void setProperties(Properties properties) {
+                           .................
+                        }
+                        因为setProperties这个方法的参数值为Properties类型，那么Properties类型的注入方式：
+                        <props>
+                            <prop key="">value</prop>
+                        </props>
+                     -->
+                    <property name="properties">
+                        <props>
+                            <prop key="helperDialect">mysql</prop>
+                            <prop key="rowBoundsWithCount">true</prop>
+                            <prop key="pageSizeZero">true</prop>
+                            <prop key="reasonable">true</prop>
+                        </props>
+                    </property>
+                </bean>
+            </array>
+        </property>
+    </bean>
+
+    <!-- 扫描mapper对应接口 -->
+    <bean class="tk.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.qf.ssmexam.dao"/>
+    </bean>
+
+    <!-- 事务的管理器，事务是和Connection挂钩的，而我们Connection在dataSource
+     -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!-- 开启使用注解配置事务 -->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+</beans>

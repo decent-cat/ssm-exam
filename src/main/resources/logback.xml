@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- scan: 当配置文件被修改后, 将会被重新载入。
+	 scanPeriod: 置监测配置文件是否有修改的时间间隔，如果没有给出时间单位，默认单位是毫秒。当scan为true时，此属性生效。默认的时间间隔为1分钟。
+	 debug: 当此属性设置为true时，将打印出logback内部日志信息，实时查看logback运行状态。默认值为false。 -->
+<configuration scan="true" scanPeriod="60 seconds" debug="false">
+
+    <!-- 输出到控制台 -->
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- 配置日志输出到控制台的格式 -->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} -- %-4relative %-5level %logger{32} %thread -- %msg%n</pattern>
+            <charset>gbk</charset>
+        </encoder>
+    </appender>
+
+    <!-- 将日志记录到文件当中 -->
+    <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 基于时间和大小的的滚动策略 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!--日志文件输出的文件名, 必须包含%i, 从0开始-->
+            <FileNamePattern>D:/logs/logback.%d{yyyy-MM-dd}.%i.log</FileNamePattern>
+            <!-- 日志文件保留天数 -->
+            <MaxHistory>30</MaxHistory>
+            <!-- 最大20KB 超过最大值，会重新建一个文件-->
+            <maxFileSize>20MB</maxFileSize>
+            <!-- 所有的日志加起来最大的大小 -->
+            <totalSizeCap>400MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符-->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %thread -- %msg%n</pattern>
+            <charset>gbk</charset>
+        </encoder>
+    </appender>
+
+    <!-- root节点是必选节点，用来指定最基础的日志输出级别，只有一个level属性。 -->
+    <!-- debug info warn error fatal -->
+    <root level="WARN">
+        <!-- 标识这个appender将会添加到这个loger。 -->
+        <appender-ref ref="stdout"/>
+        <appender-ref ref="file"/>
+    </root>
+
+</configuration>
